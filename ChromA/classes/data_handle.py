@@ -1,3 +1,4 @@
+from matplotlib.backends.backend_pdf import PdfPages
 from scipy.sparse import csr_matrix
 from scipy.io import mmwrite
 from collections import deque
@@ -10,6 +11,7 @@ import copy
 import ray
 import csv
 import os
+from ChromA.classes.chromosome_lens import *
 
 import matplotlib
 gui_env = ['Agg', 'TKAgg', 'GTKAgg', 'Qt4Agg', 'WXAgg']
@@ -23,66 +25,10 @@ for gui in gui_env:
     except:
         continue
 
-from matplotlib.backends.backend_pdf import PdfPages
-
 
 # ######################################################################
 # VALIDATE AND COMPUTE DATA OBJECTS
-def mm10_lens():
-    lens = {'chr1': 195471971, 'chr2': 182113224, 'chr3': 160039680, 'chr4': 156508116, 'chr5': 151834684,
-            'chr6': 149736546, 'chr7': 145441459, 'chr8': 129401213, 'chr9': 124595110, 'chr10': 130694993,
-            'chr11': 122082543, 'chr12': 120129022, 'chr13': 120421639, 'chr14': 124902244,
-            'chr15': 104043685, 'chr16': 98207768, 'chr17': 94987271, 'chr18': 90702639, 'chr19': 61431566,
-            'chrX': 171031299, 'chrY': 91744698, 'chrM': 16299}
 
-    return lens
-
-
-def hg19_lens():
-    lens = {'chr1': 249250621, 'chr2': 243199373, 'chr3': 198022430, 'chr4': 191154276, 'chr5': 180915260,
-            'chr6': 171115067, 'chr7': 159138663, 'chr8': 146364022, 'chr9': 141213431, 'chr10': 135534747,
-            'chr11': 135006516, 'chr12': 133851895, 'chr13': 115169878, 'chr14': 107349540,
-            'chr15': 102531392, 'chr16': 90354753, 'chr17': 81195210, 'chr18': 78077248, 'chr19': 59128983,
-            'chr20': 63025520, 'chr22': 51304566, 'chr21': 48129895, 'chrX': 155270560, 'chrY': 59373566,
-            'chrM': 16571}
-
-    return lens
-
-
-def hg38_lens():
-    lens = {'chr1': 248956422, 'chr2': 242193529, 'chr3': 198295559, 'chr4': 190214555, 'chr5': 181538259,
-            'chr6': 170805979, 'chr7': 159345973, 'chr8': 145138636, 'chr9': 138394717, 'chr10': 133797422,
-            'chr11': 135086622, 'chr12': 133275309, 'chr13': 114364328, 'chr14': 107043718,
-            'chr15': 101991189, 'chr16': 90338345, 'chr17': 83257441, 'chr18': 80373285, 'chr19': 58617616,
-            'chr20': 64444167, 'chr22': 50818468, 'chr21': 46709983, 'chrX': 156040895, 'chrY': 57227415,
-            'chrM': 16569}
-
-    return lens
-
-
-def dm6_lens():
-    lens = {'chr2L': 23513712, 'chr2R': 25286936, 'chr3L': 28110227, 'chr3R': 32079331,
-            'chr4': 1348131, 'chrM': 19524, 'chrX': 23542271, 'chrY': 3667352}
-
-    return lens
-
-
-def ciona_lens():
-    lens = {'Chr1': 15704606, 'Chr10': 8327059, 'Chr11': 8696443, 'Chr12': 7853492, 'Chr13': 4340075, 'Chr14': 6288713,
-            'Chr2': 9509017, 'Chr3': 11222275, 'Chr4': 7647452, 'Chr5': 7499939, 'Chr6': 4872821, 'Chr7': 8973615,
-            'Chr8': 8275968, 'Chr9': 8318069, 'UAContig48': 29809, 'UAContig24': 49794, 'UAContig20': 53721,
-            'UAContig26': 49264, 'UAContig19': 58221, 'UAContig18': 60964, 'UAContig10': 160731, 'UAContig45': 30295,
-            'UAContig27': 48695, 'UAContig25': 49624, 'UAContig37': 39605, 'UAContig12': 97350, 'UAContig1': 659517,
-            'UAContig2': 455181, 'UAContig17': 61212, 'UAContig40': 34855, 'UAContig3': 422458, 'UAContig6': 302016,
-            'UAContig4': 355599, 'UAContig5': 347316, 'UAContig46': 30287, 'UAContig7': 283060, 'UAContig23': 50243,
-            'UAContig11': 108407, 'UAContig8': 249787, 'UAContig14': 75836, 'UAContig9': 209129, 'UAContig15': 72792,
-            'UAContig31': 43137, 'UAContig33': 41808, 'UAContig13': 87933, 'UAContig51': 26623, 'UAContig42': 32965,
-            'UAContig38': 37619, 'UAContig47': 29906, 'UAContig53': 23448, 'UAContig22': 51644, 'UAContig28': 47875,
-            'UAContig16': 71705, 'UAContig21': 52875, 'UAContig29': 45916, 'UAContig50': 29685, 'UAContig30': 44216,
-            'UAContig41': 33945, 'UAContig44': 30449, 'UAContig39': 34958, 'UAContig43': 31566, 'UAContig34': 41180,
-            'UAContig35': 41037, 'UAContig52': 24109, 'UAContig49': 29720, 'UAContig36': 40050, 'UAContig32': 41919}
-
-    return lens
 
 
 def species_chromosomes(species, file=None):
@@ -97,6 +43,12 @@ def species_chromosomes(species, file=None):
         chrom_length = dm6_lens()
     elif species == 'ciona':
         chrom_length = ciona_lens()
+    elif species == 'oryza_glabbarima':
+        chrom_length = oryza_glaberrima_lens()
+    elif species == 'oryza_sativa_indica':
+        chrom_length = oryza_sativa_indica_lens()
+    elif species == 'oryza_sativa_japonica':
+        chrom_length = oryza_sativa_japonica_lens()
     elif species == 'new':
         if file is None:
             logging.error("File parameter cannot be empty with new species.")
@@ -145,6 +97,12 @@ def species_regions(species):
                         ['chr2L', 10215000, 10265000]]
     elif species == 'ciona':
         regions_list = [['Chr8', 3360000, 3460000]]
+    elif species == 'oryza_glabbarima':
+        regions_list = []
+    elif species == 'oryza_sativa_indica':
+        regions_list = []
+    elif species == 'oryza_sativa_japonica':
+        regions_list = []
     else:
         logging.info("WARNING: Species {} not found.".format(species))
         regions_list = []
@@ -154,7 +112,8 @@ def species_regions(species):
 
 def species_promoters(species):
 
-    chroma_root = os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+    chroma_root = os.path.abspath(os.path.dirname(
+        os.path.abspath(os.path.dirname(__file__))))
     chrom_lens = species_chromosomes(species)
 
     if species == 'mm10':
@@ -244,7 +203,8 @@ def validate_inputs(files=None):
                     pyfile = pysam.TabixFile(f_)
                     _ = pyfile.header
                 except:
-                    logging.error("ERROR:Could not read file as BAM or TABIX format. {}".format(f_))
+                    logging.error(
+                        "ERROR:Could not read file as BAM or TABIX format. {}".format(f_))
                     raise SystemExit
 
         # TRY TO VALIDATE AS 3 COLUMNS TSV, BED OR BEDGRAPH FILE
@@ -260,7 +220,8 @@ def validate_inputs(files=None):
                 preprocess_bedlike(f_)
 
             except:
-                logging.error("ERROR:Could not read file as 3 columns TSV/BED/BEDGRAPH format.{}".format(f_))
+                logging.error(
+                    "ERROR:Could not read file as 3 columns TSV/BED/BEDGRAPH format.{}".format(f_))
                 raise SystemExit
 
     logger.info("Inputs Validated")
@@ -291,7 +252,8 @@ def validate_chr(filenames, spec, specfile=None, chrom_list=None, datatype='atac
             # CHECK NUMBER OF READS IN CHROMOSOME GREATER THAN 100
             try:
                 chromosome = str(chr_)
-                reads = chr_reads([f_], chromosome, 1, int(chrom_length[chromosome]), dnase=dnase)
+                reads = chr_reads([f_], chromosome, 1, int(
+                    chrom_length[chromosome]), dnase=dnase)
                 if np.sum(reads) < 100:
                     chrom_out.remove(chr_)
                     break
@@ -326,7 +288,8 @@ def regions_th17(filename=None, species='mm10', dnase=False):
                 start = regions_list[l_][1]
                 end = regions_list[l_][2]
 
-                obs_vec.append(chr_reads(filename, chrom, start, end, dnase=dnase))
+                obs_vec.append(
+                    chr_reads(filename, chrom, start, end, dnase=dnase))
                 length.append(end - start)
                 start_l.append(start)
                 chrom_l.append(chrom)
@@ -367,35 +330,46 @@ def regions_chr(filename=None, chromosome=None, species='mm10', specfile=None, b
     # Obtained reads and populate data structure
     if len(chunks) > 0:
         logger.info(chr_ + ": Getting Reads")
-        chrom_l, start_l, length, out_data = reads_from_chunks(chunks, reads, chr_)
+        chrom_l, start_l, length, out_data = reads_from_chunks(
+            chunks, reads, chr_)
         out_data = np.concatenate(out_data)
 
         if blacklisted == "default":
             logger.info(blacklisted)
-            chroma_root = os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+            chroma_root = os.path.abspath(os.path.dirname(
+                os.path.abspath(os.path.dirname(__file__))))
 
             if species == "mm10":
-                logger.info(chr_ + ": Removing Default Blacklisted Regions mm10 genome.")
-                bl = read_bed(chroma_root + "/data/blacklisted/mm10.blacklist.bed")
+                logger.info(
+                    chr_ + ": Removing Default Blacklisted Regions mm10 genome.")
+                bl = read_bed(
+                    chroma_root + "/data/blacklisted/mm10.blacklist.bed")
                 blacklist_reads(out_data, bl, chrom_l, start_l, length)
             elif species == "hg19":
-                logger.info(chr_ + ": Removing Default Blacklisted Regions hg19 genome.")
-                bl = read_bed(chroma_root + "/data/blacklisted/hg19.blacklist.bed")
+                logger.info(
+                    chr_ + ": Removing Default Blacklisted Regions hg19 genome.")
+                bl = read_bed(
+                    chroma_root + "/data/blacklisted/hg19.blacklist.bed")
                 blacklist_reads(out_data, bl, chrom_l, start_l, length)
             elif species == "hg38":
-                logger.info(chr_ + ": Removing Default Blacklisted Regions hg38 genome.")
-                bl = read_bed(chroma_root + "/data/blacklisted/hg38.blacklist.bed")
+                logger.info(
+                    chr_ + ": Removing Default Blacklisted Regions hg38 genome.")
+                bl = read_bed(
+                    chroma_root + "/data/blacklisted/hg38.blacklist.bed")
                 blacklist_reads(out_data, bl, chrom_l, start_l, length)
             else:
-                logger.info(chr_ + ": Removing Blacklisted Regions: PASSED. GENOME NOT RECOGNIZED.")
+                logger.info(
+                    chr_ + ": Removing Blacklisted Regions: PASSED. GENOME NOT RECOGNIZED.")
         else:
             try:
                 bl = read_bed(blacklisted)
                 if len(bl) > 0:
-                    logger.info(chr_ + ": Removing Blacklisted Regions: {}".format(blacklisted))
+                    logger.info(
+                        chr_ + ": Removing Blacklisted Regions: {}".format(blacklisted))
                     blacklist_reads(out_data, bl, chrom_l, start_l, length)
             except:
-                logger.info(chr_ + ": Removing Blacklisted Regions: ERROR READING BED FILE.")
+                logger.info(
+                    chr_ + ": Removing Blacklisted Regions: ERROR READING BED FILE.")
 
         logger.info(chr_ + ": Data Collected")
     else:
@@ -441,7 +415,8 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
 
             if se / count > 0.1:
                 se = True
-                print("BAM File interpreted as single-ended. Paired-end reads recommended for ATAC-seq experiments")
+                print(
+                    "BAM File interpreted as single-ended. Paired-end reads recommended for ATAC-seq experiments")
             else:
                 se = False
 
@@ -453,10 +428,13 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
                                 or read.is_duplicate or read.mapping_quality < map_quality:
                             continue
                         else:
-                            left_tn5_start = min(read.reference_start, read.next_reference_start) + corr_left
-                            right_tn5_end = left_tn5_start + abs(read.template_length) + corr_right
+                            left_tn5_start = min(
+                                read.reference_start, read.next_reference_start) + corr_left
+                            right_tn5_end = left_tn5_start + \
+                                abs(read.template_length) + corr_right
                             if insert_size:
-                                insert_size_calc.append(np.abs(right_tn5_end - left_tn5_start))
+                                insert_size_calc.append(
+                                    np.abs(right_tn5_end - left_tn5_start))
                                 number_reads += 1
 
                             if (left_tn5_start < end - 1) and (left_tn5_start > start + 1):
@@ -472,9 +450,10 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
                         else:
 
                             if read.is_reverse:
-                                tn5_bind = read.reference_start  + corr_right
+                                tn5_bind = read.reference_start + corr_right
                             else:
-                                tn5_bind = min(read.reference_start, read.next_reference_start) + corr_left
+                                tn5_bind = min(
+                                    read.reference_start, read.next_reference_start) + corr_left
 
                             if insert_size:
                                 insert_size_calc.append(1)
@@ -487,8 +466,10 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
                     # Assume Reads are Single-Ended
                     if read.mapping_quality > map_quality:
                         # Shift Reads to Interval
-                        st = np.min([read.reference_start, read.reference_end]) - int(start)
-                        nd = np.max([read.reference_start, read.reference_end]) - int(start)
+                        st = np.min(
+                            [read.reference_start, read.reference_end]) - int(start)
+                        nd = np.max(
+                            [read.reference_start, read.reference_end]) - int(start)
 
                         # Clip if one end is outside interval
                         st = np.max([st, 0])
@@ -514,7 +495,8 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
                 right_tn5_end = int(read[2]) + corr_right
 
                 if insert_size:
-                    insert_size_calc.append(np.abs(right_tn5_end - left_tn5_start))
+                    insert_size_calc.append(
+                        np.abs(right_tn5_end - left_tn5_start))
                     number_reads += 1
 
                 if (left_tn5_start < end - 1) and (left_tn5_start > start + 1):
@@ -528,14 +510,16 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
             path, name = os.path.split(f_)
 
             if os.path.isfile(os.path.join(path, '{}_reads.npy'.format(name))):
-                reads_array = np.load(os.path.join(path, '{}_reads.npy'.format(name)))
+                reads_array = np.load(os.path.join(
+                    path, '{}_reads.npy'.format(name)))
                 chr_idx = reads_array['f0'] == chrom.encode()
                 reads_array = reads_array[chr_idx]
                 for row in reads_array:
                     left_tn5_start = int(row[1])
                     right_tn5_end = int(row[2])
                     if insert_size:
-                        insert_size_calc.append(np.abs(right_tn5_end - left_tn5_start))
+                        insert_size_calc.append(
+                            np.abs(right_tn5_end - left_tn5_start))
                         number_reads += 1
 
                     if (left_tn5_start < end - 1) and (left_tn5_start > start + 1):
@@ -552,7 +536,8 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
                             left_tn5_start = int(row[1])
                             right_tn5_end = int(row[2])
                             if insert_size:
-                                insert_size_calc.append(np.abs(right_tn5_end - left_tn5_start))
+                                insert_size_calc.append(
+                                    np.abs(right_tn5_end - left_tn5_start))
                                 number_reads += 1
 
                             if (left_tn5_start < end - 1) and (left_tn5_start > start + 1):
@@ -564,7 +549,8 @@ def chr_reads(files, chrom, start, end, insert_size=False, dnase=False, map_qual
     if insert_size:
         return out, insert_size_calc, number_reads
     else:
-        return out  # np.convolve(out[:, 0], np.ones((100, )) / 100, mode='same')[:, None]
+        # np.convolve(out[:, 0], np.ones((100, )) / 100, mode='same')[:, None]
+        return out
 
 
 def get_chunks(cov, chro, region_size=200000):
@@ -624,11 +610,16 @@ def get_chunks(cov, chro, region_size=200000):
 
         if logging.getLogger().getEffectiveLevel() == 10:
             logger = logging.getLogger()
-            avg_length = np.mean(np.array(chunks)[:, 1] - np.array(chunks)[:, 0])
-            logger.debug(chro + ": Chunk Avg Length:{0:2.0f}".format(avg_length))
-            logger.debug(chro + ": Chunks created using empty 500bp:{0:2.0f}".format(chunk_type[0]))
-            logger.debug(chro + ": Chunks created using empty 50bp:{0:2.0f}".format(chunk_type[1]))
-            logger.debug(chro + ": Chunks created using minimum 50bp:{0:2.0f}".format(chunk_type[2]))
+            avg_length = np.mean(
+                np.array(chunks)[:, 1] - np.array(chunks)[:, 0])
+            logger.debug(
+                chro + ": Chunk Avg Length:{0:2.0f}".format(avg_length))
+            logger.debug(
+                chro + ": Chunks created using empty 500bp:{0:2.0f}".format(chunk_type[0]))
+            logger.debug(
+                chro + ": Chunks created using empty 50bp:{0:2.0f}".format(chunk_type[1]))
+            logger.debug(
+                chro + ": Chunks created using minimum 50bp:{0:2.0f}".format(chunk_type[2]))
             data = []
             for i_ in np.arange(len(chunks) - 1):
                 data.append([int(chro[3:]), chunks[i_][1], chunks[i_ + 1][0]])
@@ -770,7 +761,8 @@ def write_bed(filename, data, start=None, end=None, ext=100, merge=500, filterpe
 
     with open(filename, 'w') as f:
         for i in np.arange(chrom.shape[0]):
-            f.write(str(chrom[i]) + "\t" + str(int(start[i])) + "\t" + str(int(end[i])) + "\n")
+            f.write(str(chrom[i]) + "\t" + str(int(start[i])
+                                               ) + "\t" + str(int(end[i])) + "\n")
 
 
 def bed_result(filename, data, start, chrom, threshold=0.5, bedext=100, bedmerge=500, filterpeaks=25):
@@ -860,7 +852,8 @@ def preprocess_bedlike(file):
 def frip_sn(annot, spec='mm10', file=None, dnase=False):
 
     chrom_lens, prom, reference_chromosome = species_promoters(spec)
-    approx_coef = chrom_lens[reference_chromosome] / np.sum(list(chrom_lens.values()))
+    approx_coef = chrom_lens[reference_chromosome] / \
+        np.sum(list(chrom_lens.values()))
 
     # Validate File
     if file is None:
@@ -894,13 +887,15 @@ def frip_sn(annot, spec='mm10', file=None, dnase=False):
     if idx < 200 or idx > 3800:
         idx = 1000
     if (read_prom[:100] + read_prom[-100:]).sum() > 0:
-        stn = read_prom[idx - 100:idx + 100].sum() / (read_prom[:100] + read_prom[-100:]).sum()
+        stn = read_prom[idx - 100:idx + 100].sum() / \
+            (read_prom[:100] + read_prom[-100:]).sum()
     else:
         stn = 0
 
     # Calculate Insert Size Distribution
     ins = np.array(ins)
-    ins_calc = (np.sum(ins[(ins < 210) * (ins > 190)]) / (1 + np.sum(ins[(ins < 80) * (ins > 60)])))
+    ins_calc = (np.sum(ins[(ins < 210) * (ins > 190)]) /
+                (1 + np.sum(ins[(ins < 80) * (ins > 60)])))
 
     try:
         fig1 = plt.figure()
@@ -933,11 +928,14 @@ def metrics(filename, annotations=None, species=None):
             if annotations is None:
                 logger.info("Run ChromA to compute metrics.")
             else:
-                frip_calc, sn, ins_size, number_r = frip_sn(annotations, species, [f_])
+                frip_calc, sn, ins_size, number_r = frip_sn(
+                    annotations, species, [f_])
                 logger.info("FRIP: {0:3.3f}".format(frip_calc))
                 logger.info("Signal To Noise: {0:3.3f}".format(sn))
-                logger.info("Insert Size Metric (Ratio MonoNuc to Nuc-Free): {0:3.3f}".format(ins_size))
-                logger.info("Number of Reads (Extrapolated from Chromosome 1): {0:5.0e}".format(number_r))
+                logger.info(
+                    "Insert Size Metric (Ratio MonoNuc to Nuc-Free): {0:3.3f}".format(ins_size))
+                logger.info(
+                    "Number of Reads (Extrapolated from Chromosome 1): {0:5.0e}".format(number_r))
 
 
 # ######################################################################
@@ -1009,16 +1007,19 @@ def count_fragments_bed(tsv_file, bed_file, cells_file):
     # Init Ray
     processors = int(multiprocessing.cpu_count()) - 1
     if not ray.is_initialized():
-        ray.init(num_cpus=processors, object_store_memory=int(40e9), include_webui=False)
+        ray.init(num_cpus=processors, object_store_memory=int(
+            40e9), include_webui=False)
 
     # Split Load by Processor
     splits = int(np.floor(len(interval) / processors))
-    split_interval = [interval[i:i + splits] for i in np.arange(0, len(interval), splits, dtype=int)]
+    split_interval = [interval[i:i + splits]
+                      for i in np.arange(0, len(interval), splits, dtype=int)]
 
     # Split Calculations
     results = []
     for i_ in np.arange(len(split_interval)):
-        results.append(filtering_tsv.remote(tsv_file, barcode_number, copy.copy(split_interval[i_])))
+        results.append(filtering_tsv.remote(
+            tsv_file, barcode_number, copy.copy(split_interval[i_])))
         # filtering_tsv(tsv_file, barcode_number, copy.copy(split_interval[i_]))
 
     # Collect Results
@@ -1032,16 +1033,19 @@ def count_fragments_bed(tsv_file, bed_file, cells_file):
     print("Formating Outputs")
     counts = csr_matrix(counts)
     print("Outputs")
-    mmwrite(os.path.join(path, file[:-3] + "_" + bfile[:-4] + "_counts.mtx"), counts)
+    mmwrite(os.path.join(path, file[:-3] +
+                         "_" + bfile[:-4] + "_counts.mtx"), counts)
 
     #         Writing Barcodes
-    f = open(os.path.join(path, file[:-3] + "_" + bfile[:-4] + "_barcodes.tsv"), "w")
+    f = open(os.path.join(path, file[:-3] +
+                          "_" + bfile[:-4] + "_barcodes.tsv"), "w")
     for i, barcode in enumerate(cell_list):
         print(barcode[0], end='\n', file=f)
     f.close()
 
     #         Writing Bed Peaks
-    f = open(os.path.join(path, file[:-3] + "_" + bfile[:-4] + "_peaks.bed"), "w")
+    f = open(os.path.join(path, file[:-3] +
+                          "_" + bfile[:-4] + "_peaks.bed"), "w")
     for i, region in enumerate(interval):
         print(region[0], region[1], region[2], end='\n', sep='\t', file=f)
     f.close()
