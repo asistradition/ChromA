@@ -61,7 +61,7 @@ def main(command_line=None):
     parser_atac.add_argument('-nome', '--no-metrics', action='store', dest='no_metrics', type=bool, required=False,
                              default=False, help='Flag to Compute Metrics. (default is True).')
     parser_atac.add_argument('-spec', '--species', action='store', dest='species', type=str, required=False,
-                             default='mouse', choices=,
+                             default='mouse', choices=VALID_SPECIES,
                              help='Genome Species.(default = mouse, optional)')
     parser_atac.add_argument('-specfile', '--speciesFile', action='store', dest='specfile', type=str, required=False,
                              default=None, help='If species is new, file with chrom lengths should be entered.')
