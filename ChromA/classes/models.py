@@ -185,7 +185,7 @@ class BayesianHsmmExperimentMultiProcessing:
         # Format Filename
         if name is None:
             name = "region_"
-        if path is "":
+        if path == "":
             path = os.getcwd()
 
         # Format Regions

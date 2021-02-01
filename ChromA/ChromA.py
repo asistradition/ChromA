@@ -9,6 +9,10 @@ import sys
 import os
 
 
+VALID_SPECIES = ['mm10', 'hg19', 'hg38', 'dm6', 'ciona', 'new',
+                 'oryza_glabbarima', 'oryza_sativa_indica', 'oryza_sativa_japonica']
+
+
 def main(command_line=None):
     # #############################################
     # #############################################
@@ -28,7 +32,7 @@ def main(command_line=None):
                               default=10, help='Number of iterations to fit the algorithm (default = 10, optional)')
 
     parser_dnase.add_argument('-spec', '--species', action='store', dest='species', type=str, required=False,
-                              default='mouse', choices=['mm10', 'hg19', 'hg38', 'dm6', 'ciona', 'new'],
+                              default='mouse', choices=VALID_SPECIES,
                               help='Genome Species.(default = mouse, optional)')
     parser_dnase.add_argument('-specfile', '--speciesFile', action='store', dest='specfile', type=str, required=False,
                               default=None, help='If species is new, file with chrom lengths should be entered.')
@@ -57,7 +61,7 @@ def main(command_line=None):
     parser_atac.add_argument('-nome', '--no-metrics', action='store', dest='no_metrics', type=bool, required=False,
                              default=False, help='Flag to Compute Metrics. (default is True).')
     parser_atac.add_argument('-spec', '--species', action='store', dest='species', type=str, required=False,
-                             default='mouse', choices=['mm10', 'hg19', 'hg38', 'dm6', 'ciona', 'new'],
+                             default='mouse', choices=,
                              help='Genome Species.(default = mouse, optional)')
     parser_atac.add_argument('-specfile', '--speciesFile', action='store', dest='specfile', type=str, required=False,
                              default=None, help='If species is new, file with chrom lengths should be entered.')
@@ -76,7 +80,7 @@ def main(command_line=None):
     parser_cutrun.add_argument('-it', '--iterations', action='store', dest='iterations', type=int, required=False,
                                default=20, help='Number of iterations to fit the algorithm (default = 10, optional)')
     parser_cutrun.add_argument('-spec', '--species', action='store', dest='species', type=str, required=False,
-                               default='mouse', choices=['mm10', 'hg19', 'hg38', 'dm6', 'ciona', 'new'],
+                               default='mouse', choices=VALID_SPECIES,
                                help='Genome Species.(default = mouse, optional)')
     parser_cutrun.add_argument('-specfile', '--speciesFile', action='store', dest='specfile', type=str, required=False,
                                default=None, help='If species is new, file with chrom lengths should be entered.')

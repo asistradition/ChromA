@@ -274,7 +274,7 @@ def regions_th17(filename=None, species='mm10', dnase=False):
         logger.error('File Not Found.')
         raise SystemExit
 
-    if species is not 'new':
+    if species != 'new':
         regions_list = species_regions(species)
         if len(regions_list) > 0:
             logger.info("Obtaining Curated Regions")
@@ -920,7 +920,7 @@ def metrics(filename, annotations=None, species=None):
     logger.info("DATASET METRICS.")
 
     # Compute Metrics
-    if (species is None) or (species is "new"):
+    if (species is None) or (species == "new"):
         logger.info("Cannot Compute metrics with {} species".format(species))
     else:
         for f_ in filename:
